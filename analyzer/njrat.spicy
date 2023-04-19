@@ -1,0 +1,7 @@
+# TODO: Define your analyzer here.
+
+module NJRAT;
+
+public type njRATMessage = unit {
+    payload: bytes &eod;
+};
