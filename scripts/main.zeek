@@ -1,5 +1,8 @@
 module NJRAT;
 
+@load frameworks/intel/seen
+@load base/frameworks/intel/files.zeek
+
 export {
 	## Log stream identifier.
 	redef enum Log::ID += { LOG };
@@ -12,13 +15,10 @@ export {
 		uid: string &log;
 		## The connection's 4-tuple of endpoint addresses/ports.
 		id: conn_id &log;
-
-		# TODO: Adapt subsequent fields as needed.
-
-		## Request-side payload.
-		request: string &optional &log;
-		## Response-side payload.
-		reply: string &optional &log;
+		## The direction of this njRAT message.
+		is_orig: bool &log &optional;
+		## The  RAT command, still delimited.
+		payload: string &log &optional;
 	};
 
 	## Default hook into NJRAT logging.
@@ -28,13 +28,6 @@ export {
 redef record connection += {
 	njrat: Info &optional;
 };
-
-const ports = {
-	# TODO: Replace with actual port(s).
-	12345/tcp # adapt port number in njrat.evt accordingly
-};
-
-redef likely_server_ports += { ports };
 
 event zeek_init() &priority=5
 	{
@@ -59,21 +52,25 @@ function emit_log(c: connection)
 	delete c$njrat;
 	}
 
-# Example event defined in njrat.evt.
 event NJRAT::message(c: connection, is_orig: bool, payload: string)
 	{
 	hook set_session(c);
 
-	local info = c$njrat;
-	if ( is_orig )
-		info$request = payload;
-	else
-		info$reply = payload;
+	c$njrat$payload = payload;
+	c$njrat$is_orig = is_orig;
+
+	emit_log(c);
 	}
 
-event connection_state_remove(c: connection) &priority=-5
+event zeek_init() 
 	{
-	# TODO: For UDP protocols, you may want to do this after every request
-	# and/or reply.
-	emit_log(c);
+	# Load up our IOCs
+	local intel_item = [$indicator="7.tcp.eu.ngrok.io", $indicator_type=Intel::DOMAIN, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+	Intel::insert(intel_item);
+
+	intel_item = [$indicator="3.68.56.232", $indicator_type=Intel::ADDR, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+	Intel::insert(intel_item);
+
+	intel_item = [$indicator="3f1a2a27304c02ea6e56bfd81b0bfc4cf8db5040c23f854d09b6728b1803a8b9", $indicator_type=Intel::FILE_HASH, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+	Intel::insert(intel_item);
 	}

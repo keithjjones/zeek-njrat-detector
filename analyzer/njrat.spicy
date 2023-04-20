@@ -1,7 +1,27 @@
-# TODO: Define your analyzer here.
-
 module NJRAT;
 
+function bytes2uint(input: bytes) : uint64 {
+    local exp: uint64 = |input|;
+    local sum: uint64 = 0;
+    local val: uint64;
+    local shift: uint64;
+
+    for (c in input)
+        {
+        exp--;
+        val = c-48;
+        shift = 10**exp;
+        sum = sum + ( val * shift );
+        }
+    return sum;
+}
+
+public type njRATMessages = unit {
+    messages: njRATMessage[];
+};
+
 public type njRATMessage = unit {
-    payload: bytes &eod;
+    len: /[0-9]+/ &convert=bytes2uint($$);
+    : /\x00/;
+    payload: bytes &size=self.len;
 };

@@ -1,20 +1,13 @@
-# Set up protocol confirmation/rejection for analyzers, as well as any further
-# Zeek-specific analysis.
-
 module Zeek_NJRAT;
 
 import NJRAT;
 import zeek;
 
-# TODO: Protocol analyzers should confirm once they are reasonably sure that
-# they are indeed parsing the right protocol. Pick a unit that's a little bit
-# into the parsing process here.
-#
-# on NJRAT::SUITABLE_UNIT {
-#     zeek::confirm_protocol();
-# }
+on NJRAT::njRATMessage::%done {
+    zeek::confirm_protocol();
+}
 
 # Any error bubbling up to the top unit will trigger a protocol rejection.
 on NJRAT::njRATMessage::%error {
-    zeek::reject_protocol("error while parsing NJRAT");
+    zeek::reject_protocol("error while parsing NJRAT C2 protocol!");
 }

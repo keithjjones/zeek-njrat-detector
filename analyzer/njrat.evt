@@ -1,17 +1,8 @@
 import NJRAT;
 import Zeek_NJRAT;
 
-# TODO: Adjust below how/when the analyzer will be activated. The example
-# defines a well-known port to trigger it. For more information, see:
-#
-#   https://docs.zeek.org/projects/spicy/en/latest/zeek.html#interface-definitions-evt-files
-#
 protocol analyzer spicy::NJRAT over TCP:
-    parse originator with NJRAT::njRATMessage,
-    parse responder with NJRAT::njRATMessage,
-    port 12345/tcp; # adapt port number in main.zeek accordingly
-
-# TODO: Connect Spicy-side events with Zeek-side events. The example just
-# defines a simple example event that forwards the raw data (which in practice
-# you don't want to do!).
+    parse originator with NJRAT::njRATMessages,
+    parse responder with NJRAT::njRATMessages;
+    
 on NJRAT::njRATMessage -> event NJRAT::message($conn, $is_orig, self.payload);

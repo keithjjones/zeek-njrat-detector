@@ -1,8 +1,6 @@
-# TODO: Use this file to optionally declare signatures activating your analyzer
-# (instead of, or in addition to, using a well-known port).
-#
-# signature dpd_njrat {
-#     ip-proto == tcp
-#     payload /^\x11\x22\x33\x44/ # TODO: Detect your protocol here.
-#     enable "spicy_NJRAT"
-# }
+signature dpd_njrat {
+    ip-proto == tcp
+    payload /^[0-9]+\x00[a-zA-Z]+\|/
+#    requires-reverse-signature dpd_njrat_client
+    enable "spicy_NJRAT"
+}
