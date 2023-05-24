@@ -24,4 +24,4 @@ public type njRATMessage = unit {
     len: /[0-9]+/ &convert=bytes2uint($$);
     : /\x00/;
     payload: bytes &size=self.len;
-} &requires=(self.len > 0);
+} &requires=(self.len >= 3);
