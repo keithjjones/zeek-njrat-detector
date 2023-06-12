@@ -7,6 +7,11 @@ export {
 	## Log stream identifier.
 	redef enum Log::ID += { LOG };
 
+	## The notice when njRAT C2 is observed.
+    redef enum Notice::Type += {
+        njRAT,
+    };
+
 	## Record type containing the column fields of the NJRAT log.
 	type Info: record {
 		## Timestamp for when the activity happened.
@@ -23,6 +28,9 @@ export {
 
 	## Default hook into NJRAT logging.
 	global log_njrat: event(rec: Info);
+
+    ## A default logging policy hook for the stream.
+    global log_policy: Log::PolicyHook;
 }
 
 redef record connection += {
@@ -60,6 +68,11 @@ event NJRAT::message(c: connection, is_orig: bool, payload: string)
 	c$njrat$is_orig = is_orig;
 
 	emit_log(c);
+
+	NOTICE([$note=NJRAT::njRAT,
+			$msg=fmt("Potential njRAT C2 between source %s and dest %s", c$id$orig_h, c$id$resp_h),
+			$conn=c,
+			$identifier=cat(c$id$orig_h,c$id$resp_h)]);
 	}
 
 event zeek_init() 
