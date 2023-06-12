@@ -20,9 +20,11 @@ export {
 		uid: string &log;
 		## The connection's 4-tuple of endpoint addresses/ports.
 		id: conn_id &log;
+		## If this was detected via signature only.
+		sig_only: bool &log;
 		## The direction of this njRAT message.
 		is_orig: bool &log &optional;
-		## The  RAT command, still delimited.
+		## The RAT command, still delimited.
 		payload: string &log &optional;
 	};
 
@@ -48,7 +50,7 @@ hook set_session(c: connection)
 	if ( c?$njrat )
 		return;
 
-	c$njrat = Info($ts=network_time(), $uid=c$uid, $id=c$id);
+	c$njrat = Info($ts=network_time(), $uid=c$uid, $id=c$id, $sig_only=F);
 	}
 
 function emit_log(c: connection)
@@ -74,6 +76,23 @@ event NJRAT::message(c: connection, is_orig: bool, payload: string)
 			$conn=c,
 			$identifier=cat(c$id$orig_h,c$id$resp_h)]);
 	}
+
+# Called on every signature match.
+@if ( Version::number >= 50000 )
+function NJRAT::match(state: signature_state, data: string): bool &is_used
+@else
+function NJRAT::match(state: signature_state, data: string): bool
+@endif
+	{
+	hook set_session(state$conn);
+
+	state$conn$njrat$sig_only = T;
+
+	emit_log(state$conn);
+
+	return T;
+	}
+
 
 event zeek_init() 
 	{
