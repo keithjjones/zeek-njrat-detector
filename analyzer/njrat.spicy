@@ -17,7 +17,7 @@ function bytes2uint(input: bytes) : uint64 {
 }
 
 public type njRATMessages = unit {
-    messages: njRATMessage[];
+    : njRATMessage[];
 };
 
 public type njRATMessage = unit {
