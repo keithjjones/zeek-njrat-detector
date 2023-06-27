@@ -22,7 +22,7 @@ export {
 		id: conn_id &log;
 		## The direction of this njRAT message.
 		is_orig: bool &log &optional;
-		## The  RAT command, still delimited.
+		## The RAT command, still delimited.
 		payload: string &log &optional;
 	};
 
