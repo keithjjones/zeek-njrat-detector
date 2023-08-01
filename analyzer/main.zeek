@@ -39,7 +39,7 @@ redef record connection += {
 
 event zeek_init() &priority=5
 	{
-	Log::create_stream(NJRAT::LOG, [$columns=Info, $ev=log_njrat, $path="njrat"]);
+	Log::create_stream(NJRAT::LOG, [$columns=Info, $ev=log_njrat, $path="njrat", $policy=NJRAT::log_policy]);
 	}
 
 # Initialize logging state.

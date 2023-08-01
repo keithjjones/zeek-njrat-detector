@@ -1,4 +1,5 @@
-v0.1.5      Used to_int in Spicy to replace bytes2uint.
+v0.1.6      Used to_int in Spicy to replace bytes2uint.
+v0.1.5      Added log policy.
 v0.1.4      A Spicy optimization on the messages unit.
 v0.1.3      Added a notice.
 v0.1.2      Improved detector by requiring a payload of at least 3 bytes (a command, a single char delimiter, and one char of data).

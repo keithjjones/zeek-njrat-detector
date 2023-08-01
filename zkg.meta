@@ -1,5 +1,5 @@
 [package]
-script_dir = scripts
+script_dir = analyzer
 test_command = cd testing && btest -c btest.cfg
 summary = A Zeek based njRAT detector.
 description = A Zeek based njRAT detector.
