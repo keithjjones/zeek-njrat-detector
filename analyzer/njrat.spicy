@@ -1,27 +1,11 @@
 module NJRAT;
 
-function bytes2uint(input: bytes) : uint64 {
-    local exp: uint64 = |input|;
-    local sum: uint64 = 0;
-    local val: uint64;
-    local shift: uint64;
-
-    for (c in input)
-        {
-        exp--;
-        val = c-48;
-        shift = 10**exp;
-        sum = sum + ( val * shift );
-        }
-    return sum;
-}
-
 public type njRATMessages = unit {
     : njRATMessage[];
 };
 
 public type njRATMessage = unit {
-    len: /[0-9]+/ &convert=bytes2uint($$);
+    len: /[0-9]+/ &convert=cast<uint64>($$.to_int());
     : /\x00/;
     payload: bytes &size=self.len;
 } &requires=(self.len >= 3);
