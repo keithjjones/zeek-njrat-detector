@@ -1,3 +1,4 @@
+v0.1.9      Added ability to turn off logs and just use unsuppressed notices.
 v0.1.8      Fixed tests from v0.1.7.
 v0.1.7      Disabled IoCs.
 v0.1.6      Used to_int in Spicy to replace bytes2uint.
