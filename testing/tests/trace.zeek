@@ -4,3 +4,6 @@
 # @TEST-EXEC: btest-diff output
 # @TEST-EXEC: btest-diff njrat.log
 # @TEST-EXEC: btest-diff notice.log
+
+# Turn on logs
+redef NJRAT::enable_detailed_logs = T;

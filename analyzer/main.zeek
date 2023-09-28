@@ -36,8 +36,9 @@ export {
 
 event zeek_init() &priority=5
 	{
-	Log::create_stream(NJRAT::LOG, [ $columns=Info, $ev=log_njrat, $path="njrat",
-	    $policy=NJRAT::log_policy ]);
+	if ( enable_detailed_logs )
+		Log::create_stream(NJRAT::LOG, [ $columns=Info, $ev=log_njrat, $path="njrat",
+		    $policy=NJRAT::log_policy ]);
 	}
 
 event NJRAT::message(c: connection, is_orig: bool, payload: string)
@@ -58,17 +59,20 @@ event NJRAT::message(c: connection, is_orig: bool, payload: string)
 	else
 		# Do not suppress notices.
 		NOTICE([ $note=NJRAT::njRAT, $msg=msg, $sub=payload, $conn=c ]);
-	}#event zeek_init()
-	#	{
-	# Load up our IOCs
-	# Commenting out since IoCs have a short life.
-	# Leaving here since it was discussed in a blog.
-	#	local intel_item = [$indicator="7.tcp.eu.ngrok.io", $indicator_type=Intel::DOMAIN, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
-	#	Intel::insert(intel_item);
+	}
 
-	#	intel_item = [$indicator="3.68.56.232", $indicator_type=Intel::ADDR, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
-	#	Intel::insert(intel_item);
 
-	#	intel_item = [$indicator="3f1a2a27304c02ea6e56bfd81b0bfc4cf8db5040c23f854d09b6728b1803a8b9", $indicator_type=Intel::FILE_HASH, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
-	#	Intel::insert(intel_item);
-	#	}
+#event zeek_init()
+#	{
+# Load up our IOCs
+# Commenting out since IoCs have a short life.
+# Leaving here since it was discussed in a blog.
+#	local intel_item = [$indicator="7.tcp.eu.ngrok.io", $indicator_type=Intel::DOMAIN, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+#	Intel::insert(intel_item);
+
+#	intel_item = [$indicator="3.68.56.232", $indicator_type=Intel::ADDR, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+#	Intel::insert(intel_item);
+
+#	intel_item = [$indicator="3f1a2a27304c02ea6e56bfd81b0bfc4cf8db5040c23f854d09b6728b1803a8b9", $indicator_type=Intel::FILE_HASH, $meta=[$source="njRAT", $url="https://app.any.run/tasks/72f74893-b9dc-4b1d-9d55-39e0eae86bda/#"]];
+#	Intel::insert(intel_item);
+#	}
