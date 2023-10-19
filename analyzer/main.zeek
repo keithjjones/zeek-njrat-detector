@@ -8,7 +8,7 @@ export {
 	redef enum Log::ID += { LOG };
 
 	## The notice when njRAT C2 is observed.
-	redef enum Notice::Type += { njRAT, };
+	redef enum Notice::Type += { C2_Traffic_Observed, };
 
 	## An option to enable detailed logs
 	const enable_detailed_logs = T &redef;
@@ -53,12 +53,12 @@ event NJRAT::message(c: connection, is_orig: bool, payload: string)
 
 		Log::write(NJRAT::LOG, info);
 
-		NOTICE([ $note=NJRAT::njRAT, $msg=msg, $sub=payload, $conn=c, $identifier=cat(
+		NOTICE([ $note=NJRAT::C2_Traffic_Observed, $msg=msg, $sub=payload, $conn=c, $identifier=cat(
 		    c$id$orig_h, c$id$resp_h) ]);
 		}
 	else
 		# Do not suppress notices.
-		NOTICE([ $note=NJRAT::njRAT, $msg=msg, $sub=payload, $conn=c ]);
+		NOTICE([ $note=NJRAT::C2_Traffic_Observed, $msg=msg, $sub=payload, $conn=c ]);
 	}
 
 
