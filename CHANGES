@@ -1,3 +1,4 @@
+v0.1.13     Improved DPD sig to get rid of rare false positive.
 v0.1.12     Changed notice namespace.
 v0.1.11     Moved a variable from an option to a const redef.
 v0.1.10     Improved logging.
