@@ -1,7 +1,7 @@
 module NJRAT;
 
-@load frameworks/intel/seen
-@load base/frameworks/intel/files.zeek
+#@load frameworks/intel/seen
+#@load base/frameworks/intel/files.zeek
 
 export {
 	## Log stream identifier.
