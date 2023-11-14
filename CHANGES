@@ -1,4 +1,4 @@
-v0.1.15     Remove the P command to get rid of some rare false positives.
+v0.1.15     Remove the P command in DPD sigs to get rid of some rare false positives.
 v0.1.14     Do not load the Intel libraries.
 v0.1.13     Improved DPD sig to get rid of rare false positive.
 v0.1.12     Changed notice namespace.
