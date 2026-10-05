@@ -1,0 +1,107 @@
+#! /usr/bin/env python3
+#
+# BTest helper that writes the pcap files for the large-message and
+# resource-exhaustion tests. Generating them at test time keeps large traces out
+# of the repository. Uses only the standard library. Checksums are left at zero,
+# so replay the result with "zeek -C".
+#
+# usage: gen-trace <mode> <output.pcap> [bytes]
+#
+#   messages    A small message, then messages whose payloads lie just below,
+#               at, and above the 64 KiB limit on what the analyzer keeps, then
+#               another small message.
+#   huge-len    A message claiming a ~10 GB payload, then <bytes> of filler.
+#   digit-run   A valid message, then <bytes> of ASCII digits and nothing else.
+
+import itertools
+import struct
+import sys
+
+CLIENT_IP, SERVER_IP = b"\x0a\x00\x00\x01", b"\x0a\x00\x00\x02"
+CLIENT_MAC, SERVER_MAC = b"\x02\x00\x00\x00\x00\x01", b"\x02\x00\x00\x00\x00\x02"
+SPORT, DPORT = 40000, 1177
+MSS = 1448
+SYN, ACK, PSH_ACK, SYN_ACK = 0x02, 0x10, 0x18, 0x12
+
+
+def packet(ts, from_client, seq, ack, flags, data=b""):
+    sport, dport = (SPORT, DPORT) if from_client else (DPORT, SPORT)
+    src_ip, dst_ip = (CLIENT_IP, SERVER_IP) if from_client else (SERVER_IP, CLIENT_IP)
+    src_mac, dst_mac = (CLIENT_MAC, SERVER_MAC) if from_client else (SERVER_MAC, CLIENT_MAC)
+    tcp = struct.pack("!HHIIBBHHH", sport, dport, seq & 0xFFFFFFFF, ack & 0xFFFFFFFF,
+                      5 << 4, flags, 65535, 0, 0)
+    ip = struct.pack("!BBHHHBBH4s4s", 0x45, 0, 20 + len(tcp) + len(data), 0, 0x4000, 64, 6, 0,
+                     src_ip, dst_ip)
+    frame = dst_mac + src_mac + b"\x08\x00" + ip + tcp + data
+    sec, usec = divmod(ts, 1_000_000)
+    return struct.pack("<IIII", sec, usec, len(frame), len(frame)) + frame
+
+
+def write_connection(path, chunks):
+    """Write one TCP connection in which the client sends the given byte chunks."""
+    ts = 1_700_000_000_000_000
+    c_seq, s_seq = 1000, 5000
+
+    with open(path, "wb", buffering=1 << 20) as f:
+        f.write(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1))
+
+        def out(from_client, seq, ack, flags, data=b""):
+            nonlocal ts
+            ts += 10
+            f.write(packet(ts, from_client, seq, ack, flags, data))
+
+        out(True, c_seq, 0, SYN)
+        out(False, s_seq, c_seq + 1, SYN_ACK)
+        c_seq, s_seq = c_seq + 1, s_seq + 1
+        out(True, c_seq, s_seq, ACK)
+
+        segments = 0
+        for chunk in chunks:
+            for i in range(0, len(chunk), MSS):
+                segment = chunk[i:i + MSS]
+                out(True, c_seq, s_seq, PSH_ACK, segment)
+                c_seq += len(segment)
+                segments += 1
+                if segments % 32 == 0:
+                    out(False, s_seq, c_seq, ACK)
+
+        out(False, s_seq, c_seq, ACK)
+
+
+def message(cmd, size):
+    """A valid njRAT message: "<size>\\0" followed by exactly <size> payload bytes."""
+    head = cmd + b"|'|'|"
+    return str(size).encode() + b"\x00" + head + b"J" * (size - len(head))
+
+
+def filler(count, byte, block=1 << 20):
+    for _ in range(count // block):
+        yield byte * block
+    if count % block:
+        yield byte * (count % block)
+
+
+def main():
+    if len(sys.argv) < 3:
+        sys.exit(__doc__)
+
+    mode, path = sys.argv[1], sys.argv[2]
+    count = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+
+    if mode == "messages":
+        sizes = [(b"ll", 50), (b"CAP", 65535), (b"CAP", 65536), (b"CAP", 65537),
+                 (b"CAP", 100000), (b"inf", 25)]
+        chunks = [message(cmd, size) for cmd, size in sizes]
+    elif mode == "huge-len":
+        # 10 digits: the longest length the analyzer accepts, far larger than any real message.
+        chunks = itertools.chain([b"9999999999\x00ll|'|'|"], filler(count, b"A"))
+    elif mode == "digit-run":
+        chunks = itertools.chain([message(b"ll", 50)], filler(count, b"0"))
+    else:
+        sys.exit(__doc__)
+
+    write_connection(path, chunks)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,11 +1,20 @@
 module NJRAT;
 
+# At most this many bytes of a message are kept and handed to Zeek. The rest of
+# a longer message is skipped as it arrives instead of being buffered, so the
+# memory held per connection stays bounded no matter what length the peer
+# claims. The parser still accepts messages of any size and stays in sync.
+const PAYLOAD_MAX: uint64 = 65536;
+
 public type njRATMessages = unit {
     : njRATMessage[];
 };
 
 public type njRATMessage = unit {
-    len: /[0-9]+/ &convert=cast<uint64>($$.to_int());
+    # The number of digits is limited too; an unbounded run of digits would
+    # otherwise be buffered without limit while waiting for the terminator.
+    len: /[0-9]{1,10}/ &convert=cast<uint64>($$.to_int()) &requires=(self.len >= 3);
     : /\x00/;
-    payload: bytes &size=self.len;
-} &requires=(self.len >= 3);
+    payload: bytes &size=(self.len < PAYLOAD_MAX ? self.len : PAYLOAD_MAX);
+    : skip bytes &size=(self.len > PAYLOAD_MAX ? self.len - PAYLOAD_MAX : 0);
+};
